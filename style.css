@@ -1,0 +1,18 @@
+body {
+  font-family: sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  transition: 0.3s;
+}
+:root {
+  --bg: #ffffff;
+  --text: #000000;
+}
+.dark {
+  --bg: #121212;
+  --text: #f0f0f0;
+}
+button {
+  margin: 10px;
+  padding: 8px;
+}
