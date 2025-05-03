@@ -1,43 +1,57 @@
 // auth.js
-import { auth, db } from './firebase-config.js';
+import { db } from './firebase-config.js';
 import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword
-} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  ref,
+  get,
+  set,
+  child
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 
-import { ref, set } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+document.getElementById('register-btn').onclick = async () => {
+  const username = document.getElementById('reg-username').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const age = parseInt(document.getElementById('reg-age').value);
+  const gender = document.getElementById('reg-gender').value;
 
-document.getElementById('register').onclick = async () => {
-  const email = document.getElementById('email').value;
-  const pass = document.getElementById('password').value;
+  if (!username || !password || isNaN(age) || age < 13 || age > 120) return alert('Неверные данные');
 
-  try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-    const user = userCredential.user;
+  const usersRef = ref(db, 'users');
+  const snapshot = await get(usersRef);
+  const users = snapshot.val() || {};
 
-    await set(ref(db, 'users/' + user.uid), {
-      username: email.split('@')[0],
-      gender: 'other',
-      age: 18,
-      successfulChats: 0,
-      complaints: 0,
-      banned: false
-    });
-
-    window.location.href = 'chat.html';
-  } catch (e) {
-    alert('Ошибка: ' + e.message);
+  for (const uid in users) {
+    if (users[uid].username === username) return alert('Имя занято');
   }
+
+  const uid = crypto.randomUUID();
+  await set(child(usersRef, uid), {
+    username,
+    password,
+    age,
+    gender,
+    successfulChats: 0,
+    complaints: 0,
+    banned: false
+  });
+  localStorage.setItem('hiio-user', JSON.stringify({ uid, password }));
+  window.location.href = 'chat.html';
 };
 
-document.getElementById('login').onclick = async () => {
-  const email = document.getElementById('email').value;
-  const pass = document.getElementById('password').value;
+document.getElementById('login-btn').onclick = async () => {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
 
-  try {
-    await signInWithEmailAndPassword(auth, email, pass);
-    window.location.href = 'chat.html';
-  } catch (e) {
-    alert('Ошибка: ' + e.message);
+  const usersRef = ref(db, 'users');
+  const snapshot = await get(usersRef);
+  const users = snapshot.val() || {};
+
+  for (const uid in users) {
+    const user = users[uid];
+    if (user.username === username && user.password === password) {
+      if (user.banned) return alert('Вы забанены');
+      localStorage.setItem('hiio-user', JSON.stringify({ uid, password }));
+      return (window.location.href = 'chat.html');
+    }
   }
+  alert('Неверный логин или пароль');
 };
