@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HI.io - Анонимный чат</title>
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.22.9/babel.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        // Конфигурация Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCha0f3X7fcU44F3GnNluEcdvHSKV9kbcA",
+            authDomain: "hiio-80577.firebaseapp.com",
+            databaseURL: "https://hiio-80577-default-rtdb.firebaseio.com",
+            projectId: "hiio-80577",
+            storageBucket: "hiio-80577.firebasestorage.app",
+            messagingSenderId: "837168042630",
+            appId: "1:837168042630:web:dd73b45a995f768d2e3707",
+            measurementId: "G-QDCHPCLMQM"
+        };
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // Главный компонент приложения
+        function App() {
+            const [user, setUser] = React.useState(null);
+            const [theme, setTheme] = React.useState('light');
+
+            React.useEffect(() => {
+                auth.onAuthStateChanged((user) => {
+                    setUser(user);
+                });
+            }, []);
+
+            const toggleTheme = () => {
+                setTheme(theme === 'light' ? 'dark' : 'light');
+            };
+
+            return (
+                <div className={`min-h-screen ${theme === 'light' ? 'bg-gray-100' : 'bg-gray-900 text-white'}`}>
+                    <header className="p-4 flex justify-between items-center">
+                        <h1 className="text-2xl font-bold">HI.io</h1>
+                        {user && (
+                            <div className="flex items-center space-x-4">
+                                <button onClick={toggleTheme} className="p-2 rounded bg-gray-200 dark:bg-gray-700">
+                                    {theme === 'light' ? 'Темная' : 'Светлая'} тема
+                                </button>
+                                <button onClick={() => auth.signOut()} className="p-2 rounded bg-red-500 text-white">
+                                    Выйти
+                                </button>
+                            </div>
+                        )}
+                    </header>
+                    {user ? <ChatInterface user={user} theme={theme} /> : <Auth />}
+                </div>
+            );
+        }
+
+        // Компонент авторизации
+        function Auth() {
+            const [isLogin, setIsLogin] = React.useState(true);
+            const [email, setEmail] = React.useState('');
+            const [password, setPassword] = React.useState('');
+            const [gender, setGender] = React.useState('');
+            const [age, setAge] = React.useState('');
+            const [error, setError] = React.useState('');
+
+            const handleAuth = async (e) => {
+                e.preventDefault();
+                setError('');
+                try {
+                    if (isLogin) {
+                        await auth.signInWithEmailAndPassword(email, password);
+                    } else {
+                        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                        await database.ref(`users/${userCredential.user.uid}`).set({
+                            gender,
+                            age: parseInt(age),
+                            successfulChats: 0,
+                            complaints: 0,
+                            banned: false
+                        });
+                    }
+                } catch (err) {
+                    setError(err.message);
+                }
+            };
+
+            return (
+                <div className="max-w-md mx-auto p-4">
+                    <h2 className="text-xl font-bold mb-4">{isLogin ? 'Вход' : 'Регистрация'}</h2>
+                    <form onSubmit={handleAuth} className="space-y-4">
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Электронная почта"
+                            className="w-full p-2 rounded border dark:bg-gray-800 dark:text-white"
+                            required
+                        />
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Пароль"
+                            className="w-full p-2 rounded border dark:bg-gray-800 dark:text-white"
+                            required
+                        />
+                        {!isLogin && (
+                            <>
+                                <select
+                                    value={gender}
+                                    onChange={(e) => setGender(e.target.value)}
+                                    className="w-full p-2 rounded border dark:bg-gray-800 dark:text-white"
+                                    required
+                                >
+                                    <option value="">Выберите пол</option>
+                                    <option value="male">Мужской</option>
+                                    <option value="female">Женский</option>
+                                </select>
+                                <input
+                                    type="number"
+                                    value={age}
+                                    onChange={(e) => setAge(e.target.value)}
+                                    placeholder="Возраст"
+                                    className="w-full p-2 rounded border dark:bg-gray-800 dark:text-white"
+                                    required
+                                />
+                            </>
+                        )}
+                        {error && <p className="text-red-500">{error}</p>}
+                        <button type="submit" className="w-full p-2 rounded bg-blue-500 text-white">
+                            {isLogin ? 'Войти' : 'Зарегистрироваться'}
+                        </button>
+                    </form>
+                    <button
+                        onClick={() => setIsLogin(!isLogin)}
+                        className="mt-4 text-blue-500"
+                    >
+                        Переключиться на {isLogin ? 'регистрацию' : 'вход'}
+                    </button>
+                </div>
+            );
+        }
+
+        // Компонент интерфейса чата
+        function ChatInterface({ user, theme }) {
+            const [preferredGender, setPreferredGender] = React.useState('');
+            const [preferredAgeMin, setPreferredAgeMin] = React.useState('');
+            const [preferredAgeMax, setPreferredAgeMax] = React.useState('');
+            const [currentChat, setCurrentChat] = React.useState(null);
+            const [messages, setMessages] = React.useState([]);
+            const [message, setMessage] = React.useState('');
+            const [partnerInfo, setPartnerInfo] = React.useState(null);
+            const [chatStartTime, setChatStartTime] = React.useState(null);
+
+            const findPartner = async () => {
