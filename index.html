@@ -1,18 +1,55 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>HI.io - Вход</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HI.io - Вход / Регистрация</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>HI.io</h1>
-  <div id="form-container">
-    <input id="email" type="email" placeholder="Email"><br>
-    <input id="password" type="password" placeholder="Пароль"><br>
-    <button id="login">Войти</button>
-    <button id="register">Регистрация</button>
+  <button id="toggle-theme">Переключить тему</button>
+  <div class="container">
+    <h1>HI.io</h1>
+    <div id="login-form">
+      <h2>Вход</h2>
+      <input type="text" id="login-username" placeholder="Логин" required>
+      <input type="password" id="login-password" placeholder="Пароль" required>
+      <button id="login-btn">Войти</button>
+      <div class="links">
+        <p>Нет аккаунта? <a href="javascript:void(0);" onclick="toggleForms()">Зарегистрироваться</a></p>
+      </div>
+    </div>
+    <div id="register-form" style="display: none;">
+      <h2>Регистрация</h2>
+      <input type="text" id="reg-username" placeholder="Имя пользователя" required>
+      <input type="password" id="reg-password" placeholder="Пароль" required>
+      <input type="number" id="reg-age" placeholder="Возраст" required>
+      <select id="reg-gender">
+        <option value="male">Мужчина</option>
+        <option value="female">Женщина</option>
+        <option value="other">Другое</option>
+      </select>
+      <button id="register-btn">Зарегистрироваться</button>
+      <div class="links">
+        <p>Уже есть аккаунт? <a href="javascript:void(0);" onclick="toggleForms()">Войти</a></p>
+      </div>
+    </div>
   </div>
-  <script type="module" src="script.js"></script>
+
+  <script src="auth.js"></script>
+  <script>
+    // Функция для переключения между формами входа и регистрации
+    function toggleForms() {
+      const loginForm = document.getElementById('login-form');
+      const registerForm = document.getElementById('register-form');
+      loginForm.style.display = loginForm.style.display === 'none' ? 'block' : 'none';
+      registerForm.style.display = registerForm.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Обработчик переключения темы
+    document.getElementById('toggle-theme').onclick = () => {
+      document.body.classList.toggle('dark');
+    };
+  </script>
 </body>
 </html>
