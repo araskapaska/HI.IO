@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HI.io - Anonymous Chat</title>
-    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
+    <title>HI.io - Анонимный чат</title>
+    <!-- Подключаем продакшн-версии React и ReactDOM -->
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/babel-standalone@7.22.9/babel.min.js"></script>
+    <!-- Подключаем Firebase Compatibility API -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -17,7 +19,7 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // Firebase Configuration
+        // Конфигурация Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyCha0f3X7fcU44F3GnNluEcdvHSKV9kbcA",
             authDomain: "hiio-80577.firebaseapp.com",
@@ -29,12 +31,12 @@
             measurementId: "G-QDCHPCLMQM"
         };
 
-        // Initialize Firebase
+        // Инициализация Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const database = firebase.database();
 
-        // Main App Component
+        // Главный компонент приложения
         function App() {
             const [user, setUser] = useState(null);
             const [theme, setTheme] = useState('light');
@@ -56,14 +58,16 @@
                 return () => unsubscribe();
             }, []);
 
+            // Переключение темы
             const toggleTheme = () => {
                 setTheme(theme === 'light' ? 'dark' : 'light');
             };
 
+            // Проверка статуса бана
             const checkBanStatus = (uid) => {
                 database.ref(`users/${uid}/banned`).once('value', (snapshot) => {
                     if (snapshot.val()) {
-                        alert('Your account is banned.');
+                        alert('Ваш аккаунт заблокирован.');
                         auth.signOut();
                     }
                 });
@@ -74,7 +78,7 @@
                     <header className="p-4 flex justify-between items-center">
                         <h1 className="text-2xl font-bold">HI.io</h1>
                         <button onClick={toggleTheme} className="p-2 bg-gray-200 dark:bg-gray-700 rounded">
-                            {theme === 'light' ? 'Dark' : 'Light'} Theme
+                            {theme === 'light' ? 'Темная' : 'Светлая'} тема
                         </button>
                     </header>
                     {showAuth && <Auth setShowAuth={setShowAuth} />}
@@ -85,7 +89,7 @@
                             {showChat && <Chat chatId={chatId} setShowChat={setShowChat} setShowSearch={setShowSearch} partner={partner} />}
                             {!showProfile && !showSearch && !showChat && (
                                 <button onClick={() => setShowProfile(true)} className="p-2 bg-blue-500 text-white rounded">
-                                    Edit Profile
+                                    Редактировать профиль
                                 </button>
                             )}
                         </div>
@@ -94,7 +98,7 @@
             );
         }
 
-        // Auth Component
+        // Компонент авторизации
         function Auth({ setShowAuth }) {
             const [isLogin, setIsLogin] = useState(true);
             const [email, setEmail] = useState('');
@@ -125,11 +129,11 @@
 
             return (
                 <div className="p-4 max-w-md mx-auto">
-                    <h2 className="text-xl mb-4">{isLogin ? 'Login' : 'Register'}</h2>
+                    <h2 className="text-xl mb-4">{isLogin ? 'Вход' : 'Регистрация'}</h2>
                     {!isLogin && (
                         <input
                             type="text"
-                            placeholder="Username"
+                            placeholder="Имя пользователя"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             className="p-2 mb-2 w-full border rounded"
@@ -144,23 +148,23 @@
                     />
                     <input
                         type="password"
-                        placeholder="Password"
+                        placeholder="Пароль"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="p-2 mb-2 w-full border rounded"
                     />
                     {error && <p className="text-red-500">{error}</p>}
                     <button onClick={handleAuth} className="p-2 bg-blue-500 text-white rounded w-full">
-                        {isLogin ? 'Login' : 'Register'}
+                        {isLogin ? 'Войти' : 'Зарегистрироваться'}
                     </button>
                     <button onClick={() => setIsLogin(!isLogin)} className="mt-2 text-blue-500">
-                        {isLogin ? 'Need to register?' : 'Already have an account?'}
+                        {isLogin ? 'Нужно зарегистрироваться?' : 'Уже есть аккаунт?'}
                     </button>
                 </div>
             );
         }
 
-        // Profile Component
+        // Компонент профиля
         function Profile({ setShowProfile, setShowSearch }) {
             const [gender, setGender] = useState('');
             const [age, setAge] = useState('');
@@ -168,11 +172,11 @@
 
             const saveProfile = async () => {
                 if (!['male', 'female', 'other'].includes(gender)) {
-                    setError('Invalid gender');
+                    setError('Неверный пол');
                     return;
                 }
                 if (age < 13 || age > 120) {
-                    setError('Age must be between 13 and 120');
+                    setError('Возраст должен быть от 13 до 120');
                     return;
                 }
                 try {
@@ -186,36 +190,36 @@
 
             return (
                 <div className="p-4 max-w-md mx-auto">
-                    <h2 className="text-xl mb-4">Edit Profile</h2>
+                    <h2 className="text-xl mb-4">Редактировать профиль</h2>
                     <select
                         value={gender}
                         onChange={(e) => setGender(e.target.value)}
                         className="p-2 mb-2 w-full border rounded"
                     >
-                        <option value="">Select Gender</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
+                        <option value="">Выберите пол</option>
+                        <option value="male">Мужской</option>
+                        <option value="female">Женский</option>
+                        <option value="other">Другой</option>
                     </select>
                     <input
                         type="number"
-                        placeholder="Age"
+                        placeholder="Возраст"
                         value={age}
                         onChange={(e) => setAge(e.target.value)}
                         className="p-2 mb-2 w-full border rounded"
                     />
                     {error && <p className="text-red-500">{error}</p>}
                     <button onClick={saveProfile} className="p-2 bg-blue-500 text-white rounded w-full">
-                        Save
+                        Сохранить
                     </button>
                     <button onClick={() => setShowProfile(false)} className="mt-2 text-blue-500">
-                        Cancel
+                        Отмена
                     </button>
-                </div>
+ rejects                </div>
             );
         }
 
-        // Search Component
+        // Компонент поиска собеседника
         function Search({ setShowSearch, setShowChat, setChatId, setPartner }) {
             const [preferredGender, setPreferredGender] = useState('');
             const [minAge, setMinAge] = useState('');
@@ -235,7 +239,7 @@
                     });
 
                     if (matches.length === 0) {
-                        alert('No matches found.');
+                        alert('Совпадений не найдено.');
                         return;
                     }
 
@@ -256,42 +260,42 @@
 
             return (
                 <div className="p-4 max-w-md mx-auto">
-                    <h2 className="text-xl mb-4">Find a Chat Partner</h2>
+                    <h2 className="text-xl mb-4">Найти собеседника</h2>
                     <select
                         value={preferredGender}
                         onChange={(e) => setPreferredGender(e.target.value)}
                         className="p-2 mb-2 w-full border rounded"
                     >
-                        <option value="">Any Gender</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
+                        <option value="">Любой пол</option>
+                        <option value="male">Мужской</option>
+                        <option value="female">Женский</option>
+                        <option value="other">Другой</option>
                     </select>
                     <input
                         type="number"
-                        placeholder="Min Age"
+                        placeholder="Минимальный возраст"
                         value={minAge}
                         onChange={(e) => setMinAge(e.target.value)}
                         className="p-2 mb-2 w-full border rounded"
                     />
                     <input
                         type="number"
-                        placeholder="Max Age"
+                        placeholder="Максимальный возраст"
                         value={maxAge}
                         onChange={(e) => setMaxAge(e.target.value)}
                         className="p-2 mb-2 w-full border rounded"
                     />
                     <button onClick={startSearch} className="p-2 bg-blue-500 text-white rounded w-full">
-                        Start Chat
+                        Начать чат
                     </button>
                     <button onClick={() => setShowSearch(false)} className="mt-2 text-blue-500">
-                        Cancel
+                        Отмена
                     </button>
                 </div>
             );
         }
 
-        // Chat Component
+        // Компонент чата
         function Chat({ chatId, setShowChat, setShowSearch, partner }) {
             const [messages, setMessages] = useState([]);
             const [newMessage, setNewMessage] = useState('');
@@ -324,7 +328,7 @@
             };
 
             const endChat = async () => {
-                const duration = (Date.now() - startTime) / 1000 / 60; // Duration in minutes
+                const duration = (Date.now() - startTime) / 1000 / 60; // Длительность в минутах
                 if (duration > 3) {
                     await database.ref(`users/${auth.currentUser.uid}/successfulChats`).transaction((count) => (count || 0) + 1);
                     await database.ref(`users/${partner.uid}/successfulChats`).transaction((count) => (count || 0) + 1);
@@ -335,7 +339,7 @@
             };
 
             const reportUser = async () => {
-                if (confirm('Are you sure you want to report this user?')) {
+                if (confirm('Вы уверены, что хотите пожаловаться на этого пользователя?')) {
                     const complaintsRef = database.ref(`users/${partner.uid}/complaints`);
                     await complaintsRef.transaction((count) => (count || 0) + 1);
                     const snapshot = await complaintsRef.once('value');
@@ -354,13 +358,13 @@
 
             return (
                 <div className="p-4 max-w-md mx-auto">
-                    <h2 className="text-xl mb-4">Chat with {partner.username}</h2>
-                    <button onClick={viewReputation} className="mb-2 text-blue-500">View Reputation</button>
+                    <h2 className="text-xl mb-4">Чат с {partner.username}</h2>
+                    <button onClick={viewReputation} className="mb-2 text-blue-500">Посмотреть репутацию</button>
                     {showReputation && (
                         <div className="mb-4 p-2 border rounded">
-                            <p>Successful Chats: {partner.successfulChats || 0}</p>
-                            <p>Complaints: {partner.complaints || 0}</p>
-                            <button onClick={() => setShowReputation(false)} className="mt-2 text-blue-500">Close</button>
+                            <p>Успешных чатов: {partner.successfulChats || 0}</p>
+                            <p>Жалоб: {partner.complaints || 0}</p>
+                            <button onClick={() => setShowReputation(false)} className="mt-2 text-blue-500">Закрыть</button>
                         </div>
                     )}
                     <div className="h-64 overflow-y-auto border p-2 mb-4">
@@ -376,23 +380,23 @@
                         type="text"
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
-                        placeholder="Type a message"
+                        placeholder="Введите сообщение"
                         className="p-2 w-full border rounded mb-2"
                     />
                     <button onClick={sendMessage} className="p-2 bg-blue-500 text-white rounded w-full mb-2">
-                        Send
+                        Отправить
                     </button>
                     <button onClick={endChat} className="p-2 bg-gray-500 text-white rounded w-full mb-2">
-                        End Chat
+                        Завершить чат
                     </button>
                     <button onClick={reportUser} className="p-2 bg-red-500 text-white rounded w-full">
-                        Report User
+                        Пожаловаться
                     </button>
                 </div>
             );
         }
 
-        // Render the App
+        // Рендерим приложение
         ReactDOM.render(<App />, document.getElementById('root'));
     </script>
 </body>
