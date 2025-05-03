@@ -1,41 +1,33 @@
 // chat.js
-import { auth, db } from './firebase-config.js';
-import {
-  onAuthStateChanged,
-  signOut
-} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-
+import { db } from './firebase-config.js';
 import {
   ref,
   get,
   set,
   push,
   update,
-  onValue,
-  serverTimestamp
+  onValue
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 
-let currentUser;
+let currentUser = null;
 let currentChatId = null;
 let chatStartTime = null;
 
-onAuthStateChanged(auth, async user => {
-  if (!user) return (window.location.href = 'index.html');
-  currentUser = user;
+const localUser = JSON.parse(localStorage.getItem('hiio-user'));
+if (!localUser) window.location.href = 'index.html';
 
-  const snapshot = await get(ref(db, 'users/' + user.uid));
+(async () => {
+  const snapshot = await get(ref(db, 'users/' + localUser.uid));
   const data = snapshot.val();
-  if (data.banned) {
-    alert('Вы забанены');
-    return signOut(auth);
-  }
+  if (!data || data.password !== localUser.password) return (window.location.href = 'index.html');
+  if (data.banned) return alert('Вы забанены');
+  currentUser = { ...data, uid: localUser.uid };
   document.getElementById('user-info').innerText = `Вы: ${data.username}`;
-});
+})();
 
 document.getElementById('logout').onclick = () => {
-  signOut(auth).then(() => {
-    window.location.href = 'index.html';
-  });
+  localStorage.removeItem('hiio-user');
+  window.location.href = 'index.html';
 };
 
 document.getElementById('toggle-theme').onclick = () => {
@@ -43,8 +35,8 @@ document.getElementById('toggle-theme').onclick = () => {
 };
 
 document.getElementById('start-search').onclick = async () => {
-  const myGender = document.getElementById('gender').value;
-  const myAge = parseInt(document.getElementById('age').value);
+  const myGender = currentUser.gender;
+  const myAge = currentUser.age;
   const targetGender = document.getElementById('search-gender').value;
   const targetAge = parseInt(document.getElementById('search-age').value);
 
@@ -59,7 +51,6 @@ document.getElementById('start-search').onclick = async () => {
       user.age <= targetAge &&
       !user.banned
     ) {
-      // создаем чат
       const chatRef = push(ref(db, 'chats'));
       await set(chatRef, {
         users: { 0: currentUser.uid, 1: uid },
@@ -104,15 +95,15 @@ document.getElementById('end').onclick = async () => {
   if (!currentChatId) return;
   const duration = (Date.now() - chatStartTime) / 60000;
   if (duration >= 3) {
-    // успешный чат
     const chatSnap = await get(ref(db, `chats/${currentChatId}/users`));
-    const [uid1, uid2] = [chatSnap.val()[0], chatSnap.val()[1]];
+    const userData = chatSnap.val();
+    const uid1 = userData[0];
+    const uid2 = userData[1];
     const other = uid1 === currentUser.uid ? uid2 : uid1;
     const ref1 = ref(db, `users/${currentUser.uid}/successfulChats`);
     const ref2 = ref(db, `users/${other}/successfulChats`);
-
-    update(ref1, { '.sv': 'increment' });
-    update(ref2, { '.sv': 'increment' });
+    await set(ref1, (await get(ref1)).val() + 1 || 1);
+    await set(ref2, (await get(ref2)).val() + 1 || 1);
   }
   currentChatId = null;
   alert('Чат завершен');
@@ -121,7 +112,9 @@ document.getElementById('end').onclick = async () => {
 document.getElementById('report').onclick = async () => {
   if (!currentChatId) return;
   const chatSnap = await get(ref(db, `chats/${currentChatId}/users`));
-  const [uid1, uid2] = [chatSnap.val()[0], chatSnap.val()[1]];
+  const userData = chatSnap.val();
+  const uid1 = userData[0];
+  const uid2 = userData[1];
   const other = uid1 === currentUser.uid ? uid2 : uid1;
   const complaintRef = ref(db, `users/${other}/complaints`);
   const complaintSnap = await get(complaintRef);
